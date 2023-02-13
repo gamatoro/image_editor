@@ -1,0 +1,962 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta http-equiv="X-UA-Compatible" content="IE=edge">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+    <title>Image Editor</title>
+    <style>
+        *{
+            font-family: 'Trebuchet MS', 'Lucida Sans Unicode', 'Lucida Grande', 'Lucida Sans', Arial, sans-serif;
+            box-sizing: border-box;
+        }
+        body{
+            background-color: #1b1b1b;
+            text-align: center;
+        }
+        canvas{
+            border: 1px solid gray;
+        }
+        #row{
+            overflow: hidden;
+        }
+        #column1{
+            float: left;
+            margin-left: 8%;
+        }
+        #column2{
+            float: right;
+            margin-right: 8%;
+        }
+        .buttons{
+            width: 160px;
+            height: 30px;
+            line-height: 0px;
+        }
+        .buttonsText{
+            font-size: 16px;
+            margin-bottom: 20%;
+        }
+        .buttons:hover{
+            background-color: rgb(105, 105, 105);
+        }
+        input{
+            width: 80px;
+            height: 30px;
+        }
+        input[type="text"]
+        {
+            font-size: 16px;
+        }
+        .navbar {
+            overflow: hidden;
+            background-color: #333;
+        }
+        .navbar a {
+            float: left;
+            font-size: 16px;
+            color: white;
+            text-align: center;
+            padding: 14px 16px;
+            text-decoration: none;
+        }
+        .dropdown {
+            float: left;
+            overflow: hidden;
+        }
+        .dropdown .dropbtn {
+            font-size: 16px;  
+            border: none;
+            outline: none;
+            color: white;
+            padding: 14px 16px;
+            background-color: inherit;
+            font-family: inherit;
+            margin: 0;
+        }
+        .navbar a:hover, .dropdown:hover .dropbtn {
+            background-color: #ff39bd;
+        }
+        .dropdown-content {
+            display: none;
+            position: absolute;
+            background-color: #f789d2;
+            min-width: 160px;
+            box-shadow: 0px 8px 16px 0px rgba(0,0,0,0.2);
+            z-index: 1;
+        }
+        #histogramID{
+            background-color: #ffffff;
+            min-width: 300px;
+        }
+        .dropdown-content a {
+            float: none;
+            color: black;
+            padding: 12px 16px;
+            text-decoration: none;
+            display: block;
+            text-align: left;
+        }
+        .dropdown-content a:hover {
+            background-color: #ddd;
+        }
+        .dropdown:hover .dropdown-content {
+            display: block;
+        }
+    </style>
+</head>
+<body>
+    <div class="navbar">
+        <div class="dropdown">
+          <button class="dropbtn">OSNOVNE FUNKCIJE 
+            <i class="fa fa-caret-down"></i>
+          </button>
+            <div class="dropdown-content">
+                <table>
+                    <tr>
+                        <th><button class="buttons" id="gs"><h3 class="buttonsText">GRAYSCALE</h3></button></th>            
+                    </tr>
+                    <tr>               
+                        <th><button class="buttons" id="th"><h3 class="buttonsText">TRESHOLDING</h1></button></th>
+                        <th><input type="text" id="example" placeholder="0-255"></th>
+                    </tr>
+                    <tr>              
+                        <th><button class="buttons" id="rrgb"><h3 class="buttonsText">REMOVE RGB</h1></button></th>
+                        <th><input type="text" id="rrgbV" placeholder="R, G, B"></th>               
+                    </tr>
+                    <tr>              
+                        <th><button class="buttons" id="ergb"><h3 class="buttonsText">ENHANCE RGB</h1></button></th>
+                        <th><input type="text" id="ergbV" placeholder="R, G, B"></th>
+                    </tr>
+                    <tr>               
+                        <th><button class="buttons" id="br"><h3 class="buttonsText">BRIGHTNESS</h1></button></th>
+                        <th><input type="text" id="bright" placeholder="0-255"></th>
+                    </tr>
+                    <tr>
+                        <th><button class="buttons" id="inv"><h3 class="buttonsText">INVERT</h1></button></th> 
+                    </tr>
+                </table>
+            </div>
+        </div> 
+
+        <div class="dropdown">
+            <button class="dropbtn">NAPREDNE FUNKCIJE 
+              <i class="fa fa-caret-down"></i>
+            </button>
+              <div class="dropdown-content">
+                    <table>
+                        <tr>
+                            <th><button class="buttons" id="boxF"><h3 class="buttonsText">BOX FILTER</h1></button></th>            
+                        </tr>
+                        <tr>               
+                            <th><button class="buttons" id="lap"><h3 class="buttonsText">LAPLACEOV</h1></button></th>
+                        </tr>
+                        <tr>              
+                            <th><button class="buttons" id="xTop"><h3 class="buttonsText">xTOP SOBEL</h1></button></th>             
+                        </tr>
+                        <tr>              
+                            <th><button class="buttons" id="med"><h3 class="buttonsText">MEDIANIN FILTER</h1></button></th>
+                        </tr>
+                        <tr>               
+                            <th><button class="buttons" id="sharp"><h3 class="buttonsText">SHARPENING</h1></button></th>
+                        </tr>
+                        <tr>
+                            <th><button class="buttons" id="unsharp"><h3 class="buttonsText">UNSHARP MASKING</h1></button></th> 
+                        </tr>
+                    </table>
+              </div>
+          </div>
+
+          <div class="dropdown">
+            <button class="dropbtn">HISTOGRAM 
+              <i class="fa fa-caret-down"></i>
+            </button>
+              <div class="dropdown-content" id="histogramID">
+                <div>
+                    <canvas id="hist"></canvas>
+                </div>
+                <button class="buttons" id="refr"><h3>REFRESH</h3></button>
+            </div>
+        </div>
+
+          <div class="dropdown">
+            <button class="dropbtn" id="undoLet">UNDO</button>
+          </div>
+          <div class="dropdown">
+            <button class="dropbtn" id="redoLet">REDO</button>
+          </div>
+          <div class="dropdown">
+            <button class="dropbtn" id="res">RESET</button>
+          </div>
+      </div>
+
+    <br><br><br><br><br><br><br><br><br><br><br><br>
+
+    <span id="imgCan">
+        <img id="mainPic" src="freaks.jpg" width="700" height="400" ondrop="drop(event)" ondragover="allowDrop(event)">
+        <canvas id="canvas" width = "700" height="400"></canvas>
+    </span>
+
+<script>
+    let img = document.getElementById('mainPic');
+    let canvas = document.getElementById('canvas');
+    let ctx = canvas.getContext('2d');
+    let undoArr, redoArr;
+    img.onload = function() {
+        ctx.drawImage(img, 0, 0, 700, 400);
+        let imgData = ctx.getImageData(0, 0, 700, 400);
+
+function pretvorba(imgData) {
+        let arr2D = new Array(400);
+        let t = 0;
+        for (let i = 0; i < 400; i++) {
+            arr2D[i]  = new Array(700);
+            for (let j = 0; j < 700; j++) {
+                arr2D[i][j] = new Array(4);
+                for (let k = 0; k < 4; k++, t++) arr2D[i][j][k] = imgData.data[t];
+            }
+        }
+    return arr2D;
+}
+
+function boxFilter() {
+    undoArr = ctx.getImageData(0, 0, 700, 400);
+    console.log(undoArr);
+    let kopija = mojArr;
+    let t = 0;
+    for (let i = 1; i < 400; i++) {
+        for (let j = 1; j < 700; j++) {
+        try {
+        let sestevek = parseInt(kopija[i-1][j+1][0],10) + 
+                        parseInt(kopija[i][j+1][0],10) + 
+                        parseInt(kopija[i+1][j+1][0],10) + 
+                        parseInt(kopija[i-1][j][0],10) +  
+                        parseInt(kopija[i][j][0],10) + 
+                        parseInt(kopija[i+1][j][0],10) + 
+                        parseInt(kopija[i-1][j-1][0],10) + 
+                        parseInt(kopija[i][j-1][0],10) + 
+                        parseInt(kopija[i+1][j-1][0],10);
+        if (sestevek / 9 > 255) imgData.data[t] = 255;
+        else imgData.data[t] = sestevek / 9;
+        } catch {
+            
+        } t++;
+
+        try {
+        sestevek = parseInt(kopija[i-1][j+1][1],10) + 
+                    parseInt(kopija[i][j+1][1],10) + 
+                    parseInt(kopija[i+1][j+1][1],10) + 
+                    parseInt(kopija[i-1][j][1],10) +  
+                    parseInt(kopija[i][j][1],10) + 
+                    parseInt(kopija[i+1][j][1],10) + 
+                    parseInt(kopija[i-1][j-1][1],10) + 
+                    parseInt(kopija[i][j-1][1],10) + 
+                    parseInt(kopija[i+1][j-1][1],10);
+                    
+        if (sestevek / 9 > 255) imgData.data[t] = 255;
+        else imgData.data[t] = sestevek / 9;
+        } catch {
+            
+        } t++;
+
+        try {
+        sestevek = parseInt(kopija[i-1][j+1][2],10) + 
+                    parseInt(kopija[i][j+1][2],10) + 
+                    parseInt(kopija[i+1][j+1][2],10) + 
+                    parseInt(kopija[i-1][j][2],10) +  
+                    parseInt(kopija[i][j][2],10) + 
+                    parseInt(kopija[i+1][j][2],10) + 
+                    parseInt(kopija[i-1][j-1][2],10) + 
+                    parseInt(kopija[i][j-1][2],10) + 
+                    parseInt(kopija[i+1][j-1][2],10);
+        
+
+            if (sestevek / 9 > 255) imgData.data[t] = 255;
+            else imgData.data[t] = sestevek / 9;
+            } catch {
+                
+            } t+=2;
+        }
+        t+=4;
+    }
+    ctx.putImageData(imgData, 0, 0);
+    redoArr = ctx.getImageData(0, 0, 700, 400);
+}
+
+function undo(){
+    ctx.putImageData(undoArr, 0, 0);
+}
+function redo(){
+    ctx.putImageData(redoArr, 0, 0);
+}
+
+function laplaceov() {
+    undoArr = ctx.getImageData(0, 0, 700, 400);
+    let kopija = mojArr;
+    let t = 0;
+    for (let i = 1; i < 400; i++) {   
+        for (let j = 1; j < 700; j++) {
+        try {
+        let sestevek = parseInt(kopija[i-1][j+1][0],10) * 0 + 
+                        parseInt(kopija[i][j+1][0],10) * 1 + 
+                        parseInt(kopija[i+1][j+1][0],10) * 0 + 
+                        parseInt(kopija[i-1][j][0],10) * 1 +  
+                        parseInt(kopija[i][j][0],10) * (-4) + 
+                        parseInt(kopija[i+1][j][0],10) * 1 + 
+                        parseInt(kopija[i-1][j-1][0],10) * 0 + 
+                        parseInt(kopija[i][j-1][0],10)  * 1 + 
+                        parseInt(kopija[i+1][j-1][0],10) * 0;
+        if (sestevek > 255) imgData.data[t] = 255;
+        else if (sestevek < 0) imgData.data[t] = 0;
+        else imgData.data[t] = sestevek;
+        } catch {
+
+        }t++;
+
+        try {
+        let sestevek = parseInt(kopija[i-1][j+1][1],10) * 0 + 
+                        parseInt(kopija[i][j+1][1],10) * 1 + 
+                        parseInt(kopija[i+1][j+1][1],10) * 0 + 
+                        parseInt(kopija[i-1][j][1],10) * 1 +  
+                        parseInt(kopija[i][j][1],10) * (-4) + 
+                        parseInt(kopija[i+1][j][1],10) * 1 + 
+                        parseInt(kopija[i-1][j-1][1],10) * 0 + 
+                        parseInt(kopija[i][j-1][1],10)  * 1 + 
+                        parseInt(kopija[i+1][j-1][1],10) * 0;
+        if (sestevek > 255) imgData.data[t] = 255;
+        else if (sestevek < 0) imgData.data[t] = 0;
+        else imgData.data[t] = sestevek;
+        } catch {
+
+        }t++;
+
+        try {
+        sestevek = parseInt(kopija[i-1][j+1][2],10) * 0 + 
+                    parseInt(kopija[i][j+1][2],10) * 1 + 
+                    parseInt(kopija[i+1][j+1][2],10) * 0 + 
+                    parseInt(kopija[i-1][j][2],10) * 1 +  
+                    parseInt(kopija[i][j][2],10) * (-4) + 
+                    parseInt(kopija[i+1][j][2],10) * 1 + 
+                    parseInt(kopija[i-1][j-1][2],10) * 0 + 
+                    parseInt(kopija[i][j-1][2],10)  * 1 + 
+                    parseInt(kopija[i+1][j-1][2],10) * 0;
+        if (sestevek > 255) imgData.data[t] = 255;
+        else if (sestevek < 0) imgData.data[t] = 0;
+        else imgData.data[t] = sestevek;
+        } catch {
+
+        }t+=2;
+        }t+=4;
+    }
+    ctx.putImageData(imgData, 0, 0);
+    redoArr = ctx.getImageData(0, 0, 700, 400);
+}
+
+function xTopSobel() {
+    undoArr = ctx.getImageData(0, 0, 700, 400);
+    let kopija = mojArr;
+    let t = 0;
+    for (let i = 1; i < 400; i++) {       
+        for (let j = 1; j < 700; j++) {
+        try {
+        let sestevek = parseInt(kopija[i-1][j-1][0],10) * -1 + 
+                        parseInt(kopija[i-1][j][0],10) * -2 + 
+                        parseInt(kopija[i-1][j+1][0],10) * -1 + 
+                        parseInt(kopija[i][j-1][0],10) * 0 +  
+                        parseInt(kopija[i][j][0],10) * 0 + 
+                        parseInt(kopija[i][j+1][0],10) * 0 + 
+                        parseInt(kopija[i+1][j-1][0],10) * 1 + 
+                        parseInt(kopija[i+1][j][0],10)  * 2 + 
+                        parseInt(kopija[i+1][j+1][0],10) * 1;
+        if (sestevek > 255) imgData.data[t] = 255;
+        else if (sestevek < 0) imgData.data[t] = 0;
+        else imgData.data[t] = sestevek;
+        } catch {
+
+        }t++;
+
+        try {
+        sestevek = parseInt(kopija[i-1][j-1][1],10) * -1 + 
+                        parseInt(kopija[i-1][j][1],10) * -2 + 
+                        parseInt(kopija[i-1][j+1][1],10) * -1 + 
+                        parseInt(kopija[i][j-1][1],10) * 0 +  
+                        parseInt(kopija[i][j][1],10) * 0 + 
+                        parseInt(kopija[i][j+1][1],10) * 0 + 
+                        parseInt(kopija[i+1][j-1][1],10) * 1 + 
+                        parseInt(kopija[i+1][j][1],10)  * 2 + 
+                        parseInt(kopija[i+1][j+1][1],10) * 1;
+        
+        if (sestevek > 255) imgData.data[t] = 255;
+        else if (sestevek < 0) imgData.data[t] = 0;
+        else imgData.data[t] = sestevek;
+        } catch {
+
+        }t++;
+
+        try {
+        sestevek = parseInt(kopija[i-1][j-1][2],10) * -1 +     
+                        parseInt(kopija[i-1][j][2],10) * -2 + 
+                        parseInt(kopija[i-1][j+1][2],10) * -1 + 
+                        parseInt(kopija[i][j-1][2],10) * 0 +  
+                        parseInt(kopija[i][j][2],10) * 0 + 
+                        parseInt(kopija[i][j+1][2],10) * 0 + 
+                        parseInt(kopija[i+1][j-1][2],10) * 1 + 
+                        parseInt(kopija[i+1][j][2],10)  * 2 + 
+                        parseInt(kopija[i+1][j+1][2],10) * 1;
+        
+
+        if (sestevek > 255) imgData.data[t] = 255;
+        else if (sestevek < 0) imgData.data[t] = 0;
+        else imgData.data[t] = sestevek;
+        } catch {
+
+        } t+=2;
+    } t+=4;
+}
+ctx.putImageData(imgData, 0, 0);
+redoArr = ctx.getImageData(0, 0, 700, 400);
+}
+
+
+function medianin(arrElementov) {
+        const sorted = arrElementov.slice().sort((a,b) => a - b);
+        const middle = Math.floor(sorted.length / 2);
+
+        if (sorted.length % 2 === 0) {
+            return (sorted[middle-1] + sorted[middle] / 2);
+        }
+    return sorted[middle];
+}
+
+function medianinFilter() {
+    undoArr = ctx.getImageData(0, 0, 700, 400);
+    let kopija = mojArr;
+    let t = 0;
+    for (let i = 1; i < 400; i++) {
+        for (let j = 1; j < 700; j++) {
+        try {
+        let filterValues = [
+            parseInt(kopija[i-1][j+1][0],10), 
+            parseInt(kopija[i][j+1][0],10),
+            parseInt(kopija[i+1][j+1][0],10), 
+            parseInt(kopija[i-1][j][0],10), 
+            parseInt(kopija[i][j][0],10), 
+            parseInt(kopija[i+1][j][0],10), 
+            parseInt(kopija[i-1][j-1][0],10), 
+            parseInt(kopija[i][j-1][0],10),
+            parseInt(kopija[i+1][j-1][0],10)
+        ];
+
+        imgData.data[t] = medianin(filterValues);
+
+        } catch {
+
+        }t++;
+
+        try {
+        filterValues = [
+            parseInt(kopija[i-1][j+1][1],10), 
+            parseInt(kopija[i][j+1][1],10),
+            parseInt(kopija[i+1][j+1][1],10), 
+            parseInt(kopija[i-1][j][1],10), 
+            parseInt(kopija[i][j][1],10), 
+            parseInt(kopija[i+1][j][1],10), 
+            parseInt(kopija[i-1][j-1][1],10), 
+            parseInt(kopija[i][j-1][1],10),
+            parseInt(kopija[i+1][j-1][1],10)
+        ];
+
+        imgData.data[t] = medianin(filterValues);
+        
+        } catch {
+
+        }t++;
+
+        try {
+        filterValues = [
+            parseInt(kopija[i-1][j+1][2],10), 
+            parseInt(kopija[i][j+1][2],10),
+            parseInt(kopija[i+1][j+1][2],10), 
+            parseInt(kopija[i-1][j][2],10), 
+            parseInt(kopija[i][j][2],10), 
+            parseInt(kopija[i+1][j][2],10), 
+            parseInt(kopija[i-1][j-1][2],10), 
+            parseInt(kopija[i][j-1][2],10),
+            parseInt(kopija[i+1][j-1][2],10)
+        ];
+
+        imgData.data[t] = medianin(filterValues);
+
+        } catch {
+
+        }t+=2;
+    }t+=4;
+}
+ctx.putImageData(imgData, 0, 0);
+redoArr = ctx.getImageData(0, 0, 700, 400);
+}
+
+function sharpening() {
+    undoArr = ctx.getImageData(0, 0, 700, 400);
+    let kopija = mojArr;
+    let t = 0;
+    for (let i = 1; i < 400; i++) {
+        for (let j = 1; j < 700; j++) {
+        try {
+        let sestevek = parseInt(kopija[i-1][j+1][0],10) * 0 + 
+                        parseInt(kopija[i][j+1][0],10) * 1 + 
+                        parseInt(kopija[i+1][j+1][0],10) * 0 + 
+                        parseInt(kopija[i-1][j][0],10) * 1 +  
+                        parseInt(kopija[i][j][0],10) * (-4) + 
+                        parseInt(kopija[i+1][j][0],10) * 1 + 
+                        parseInt(kopija[i-1][j-1][0],10) * 0 + 
+                        parseInt(kopija[i][j-1][0],10)  * 1 + 
+                        parseInt(kopija[i+1][j-1][0],10) * 0;
+
+        if (sestevek > 255) imgData.data[t] = 255;
+        else if (sestevek < 0) imgData.data[t] = 0;
+        else imgData.data[t] = sestevek;
+        } catch {
+
+        }t++;
+
+        try {
+        sestevek = parseInt(kopija[i-1][j+1][1],10) * 0 + 
+                        parseInt(kopija[i][j+1][1],10) * 1 + 
+                        parseInt(kopija[i+1][j+1][1],10) * 0 + 
+                        parseInt(kopija[i-1][j][1],10) * 1 +  
+                        parseInt(kopija[i][j][1],10) * (-4) + 
+                        parseInt(kopija[i+1][j][1],10) * 1 + 
+                        parseInt(kopija[i-1][j-1][1],10) * 0 + 
+                        parseInt(kopija[i][j-1][1],10)  * 1 + 
+                        parseInt(kopija[i+1][j-1][1],10) * 0;
+        
+        if (sestevek > 255) imgData.data[t] = 255;
+        else if (sestevek < 0) imgData.data[t] = 0;
+        else imgData.data[t] = sestevek;
+        } catch {
+
+        }t++;
+
+        try {
+        sestevek = parseInt(kopija[i-1][j+1][2],10) * 0 + 
+                    parseInt(kopija[i][j+1][2],10) * 1 + 
+                    parseInt(kopija[i+1][j+1][2],10) * 0 + 
+                    parseInt(kopija[i-1][j][2],10) * 1 +  
+                    parseInt(kopija[i][j][2],10) * (-4) + 
+                    parseInt(kopija[i+1][j][2],10) * 1 + 
+                    parseInt(kopija[i-1][j-1][2],10) * 0 + 
+                    parseInt(kopija[i][j-1][2],10)  * 1 + 
+                    parseInt(kopija[i+1][j-1][2],10) * 0;
+        
+
+        if (sestevek > 255) imgData.data[t] = 255;
+        else if (sestevek < 0) imgData.data[t] = 0;
+        else imgData.data[t] = sestevek;
+        } catch {
+
+        } t+=2;
+
+        }t+=4;
+    }
+    ctx.putImageData(imgData, 0, 0);
+    redoArr = ctx.getImageData(0, 0, 700, 400);
+}
+
+function unsharpMasking() {
+    undoArr = ctx.getImageData(0, 0, 700, 400);
+    let kopija = mojArr;
+    let t = 0;
+    for (let i = 1; i < 400; i++) {  
+        for (let j = 1; j < 700; j++) {
+        try {
+        let sestevek = parseInt(kopija[i-1][j+1][0],10) * 0 + 
+                        parseInt(kopija[i][j+1][0],10) * -1 + 
+                        parseInt(kopija[i+1][j+1][0],10) * 0 + 
+                        parseInt(kopija[i-1][j][0],10) * -1 +  
+                        parseInt(kopija[i][j][0],10) * (5) + 
+                        parseInt(kopija[i+1][j][0],10) * -1 + 
+                        parseInt(kopija[i-1][j-1][0],10) * 0 + 
+                        parseInt(kopija[i][j-1][0],10)  * -1 + 
+                        parseInt(kopija[i+1][j-1][0],10) * 0;
+
+        if (sestevek > 255) imgData.data[t] = 255;
+        else if (sestevek < 0) imgData.data[t] = 0;
+        else imgData.data[t] = sestevek;
+        } catch {
+
+        }t++;
+
+        try {
+        let sestevek = parseInt(kopija[i-1][j+1][1],10) * 0 + 
+                        parseInt(kopija[i][j+1][1],10) * -1 + 
+                        parseInt(kopija[i+1][j+1][1],10) * 0 + 
+                        parseInt(kopija[i-1][j][1],10) * -1 +  
+                        parseInt(kopija[i][j][1],10) * (5) + 
+                        parseInt(kopija[i+1][j][1],10) * -1 + 
+                        parseInt(kopija[i-1][j-1][1],10) * 0 + 
+                        parseInt(kopija[i][j-1][1],10)  * -1 + 
+                        parseInt(kopija[i+1][j-1][1],10) * 0;
+        
+        if (sestevek > 255) imgData.data[t] = 255;
+        else if (sestevek < 0) imgData.data[t] = 0;
+        else imgData.data[t] = sestevek;
+        } catch {
+
+        }t++;
+
+        try {
+        sestevek = parseInt(kopija[i-1][j+1][2],10) * 0 + 
+                    parseInt(kopija[i][j+1][2],10) * -1 + 
+                    parseInt(kopija[i+1][j+1][2],10) * 0 + 
+                    parseInt(kopija[i-1][j][2],10) * -1 +  
+                    parseInt(kopija[i][j][2],10) * (5) + 
+                    parseInt(kopija[i+1][j][2],10) * -1 + 
+                    parseInt(kopija[i-1][j-1][2],10) * 0 + 
+                    parseInt(kopija[i][j-1][2],10)  * -1 + 
+                    parseInt(kopija[i+1][j-1][2],10) * 0;
+        
+        if (sestevek > 255) imgData.data[t] = 255;
+        else if (sestevek < 0) imgData.data[t] = 0;
+        else imgData.data[t] = sestevek;
+        } catch {
+
+        } t+=2;
+        }t+=4;
+    }
+    ctx.putImageData(imgData, 0, 0);
+    redoArr = ctx.getImageData(0, 0, 700, 400);
+}
+
+    let mojArr = pretvorba(imgData);
+    let box = document.getElementById("boxF");
+    let lap = document.getElementById("lap");
+    let xTop = document.getElementById("xTop");
+    let med = document.getElementById("med");
+    let sharp = document.getElementById("sharp");
+    let unsharp = document.getElementById("unsharp");
+    let undoLet = document.getElementById("undoLet");
+    let redoLet = document.getElementById("redoLet");
+    box.addEventListener("click", boxFilter);
+    lap.addEventListener("click", laplaceov);
+    xTop.addEventListener("click", xTopSobel);
+    med.addEventListener("click", medianinFilter);
+    sharp.addEventListener("click", sharpening);
+    unsharp.addEventListener("click", unsharpMasking);
+    undoLet.addEventListener("click", undo);
+    redoLet.addEventListener("click", redo);
+};
+window.addEventListener('DOMContentLoaded', (event) => {
+
+const resetAll = function(ev){img.src = 'freaks.jpg';}
+
+const greyscale = function(ev){
+    undoArr = ctx.getImageData(0, 0, 700, 400);
+    imgData = ctx.getImageData(0, 0, canvas.width, canvas.height);
+    let arr = imgData.data;
+    for(let i=0; i<arr.length; i+=4){
+        let ttl = arr[i] + arr[i+1] + arr[i+2];
+        let avg = parseInt(ttl/3);
+        arr[i] = avg;
+        arr[i+1] = avg;
+        arr[i+2] = avg;
+    }
+    imgData.data = arr;
+    ctx.putImageData(imgData, 0, 0);
+    redoArr = ctx.getImageData(0, 0, 700, 400);
+    canvas.toDataURL('image/png');
+}
+
+const colorChannel = function(ev){
+    undoArr = ctx.getImageData(0, 0, 700, 400);
+    let ecolor = document.getElementById("ergbV").value.toUpperCase();
+    imgData = ctx.getImageData(0, 0, canvas.width, canvas.height);
+    let arr = imgData.data;
+    for(let i=0; i<arr.length; i=i+4){
+        switch(ecolor){
+            case 'R': arr[i+1]=0, arr[i+2]=0; break;
+            case 'G': arr[i]=0, arr[i+2]=0; break;
+            case 'B': arr[i]=0, arr[i+1]=0; break;
+        }
+    }
+    imgData.data = arr;
+    ctx.putImageData(imgData, 0, 0);
+    redoArr = ctx.getImageData(0, 0, 700, 400);
+}
+
+const treshold = function(ev){
+    undoArr = ctx.getImageData(0, 0, 700, 400);
+    let val = document.getElementById("example").value;
+    imgData = ctx.getImageData(0, 0, canvas.width, canvas.height); 
+    let arr = imgData.data; 
+    let tresh = val;
+    for(let i=0; i<arr.length; i+=4){ 
+        arr[i] = (arr[i]>tresh) ? arr[i]=255 : arr[i]=0;
+        arr[i+1] = (arr[i+1]>tresh) ? arr[i+1]=255 : arr[i+1]=0;
+        arr[i+2] = (arr[i+2]>tresh) ? arr[i+2]=255 : arr[i+2]=0;
+    }
+    imgData.data = arr;
+    ctx.putImageData(imgData, 0, 0); 
+    redoArr = ctx.getImageData(0, 0, 700, 400);
+}
+
+const removeRGB = function(ev){
+    undoArr = ctx.getImageData(0, 0, 700, 400);
+    let rcolor = document.getElementById("rrgbV").value.toUpperCase();
+    imgData = ctx.getImageData(0, 0, canvas.width, canvas.height); 
+    let arr = imgData.data; 
+    for(let i=0; i<arr.length; i+=4){
+        switch(rcolor){
+            case 'R': arr[i]=0; break;
+            case 'G': arr[i+1]=0; break;
+            case 'B': arr[i+2]=0; break;
+        }
+    }
+    imgData.data = arr;
+    ctx.putImageData(imgData, 0, 0);
+    redoArr = ctx.getImageData(0, 0, 700, 400);
+}
+
+const brightness = function(ev){
+    undoArr = ctx.getImageData(0, 0, 700, 400);
+    let bright = parseInt(document.getElementById("bright").value);
+    imgData = ctx.getImageData(0, 0, canvas.width, canvas.height); 
+    let arr = imgData.data;
+    for(let i=0; i<arr.length; i+=4){
+        arr[i+3] = bright;
+    }
+    imgData.data = arr;
+    ctx.putImageData(imgData, 0, 0);
+    redoArr = ctx.getImageData(0, 0, 700, 400);
+}
+
+const invert = function(ev){
+    undoArr = ctx.getImageData(0, 0, 700, 400);
+    imgData = ctx.getImageData(0, 0, canvas.width, canvas.height);
+    let arr = imgData.data;
+    for(let i=0; i<arr.length; i+=4){
+        arr[i] = 255-arr[i];
+        arr[i+1] = 255-arr[i+1];
+        arr[i+2] = 255-arr[i+2];
+    }
+    imgData.data = arr;
+    ctx.putImageData(imgData, 0, 0);
+    redoArr = ctx.getImageData(0, 0, 700, 400);
+}
+
+let redA = [];
+redA[0] = 0;
+redA[1] = 0;
+redA[2] = 0;
+redA[3] = 0;
+redA[4] = 0;
+redA[5] = 0;
+redA[6] = 0;
+redA[7] = 0;
+redA[8] = 0;
+redA[9] = 0;
+let greenA = [];
+greenA[0] = 0;
+greenA[1] = 0;
+greenA[2] = 0;
+greenA[3] = 0;
+greenA[4] = 0;
+greenA[5] = 0;
+greenA[6] = 0;
+greenA[7] = 0;
+greenA[8] = 0;
+greenA[9] = 0;
+let blueA = [];
+blueA[0] = 0;
+blueA[1] = 0;
+blueA[2] = 0;
+blueA[3] = 0;
+blueA[4] = 0;
+blueA[5] = 0;
+blueA[6] = 0;
+blueA[7] = 0;
+blueA[8] = 0;
+blueA[9] = 0;
+
+function histogram(){
+    imgData = ctx.getImageData(0, 0, canvas.width, canvas.height);
+    let arr = imgData.data;
+    for(let i=0; i<arr.length; i+=4){
+        if(arr[i]<=26) redA[0] = redA[0] + 1;
+        else if(arr[i]<=52) redA[1]++;
+        else if(arr[i]<=78) redA[2]++;
+        else if(arr[i]<=104) redA[3]++;
+        else if(arr[i]<=130) redA[4]++;
+        else if(arr[i]<=156) redA[5]++;
+        else if(arr[i]<=182) redA[6]++;
+        else if(arr[i]<=208) redA[7]++;
+        else if(arr[i]<=234) redA[8]++;
+        else if(arr[i]<=255) redA[9]++;
+
+        if(arr[i]<=26) greenA[0] = greenA[0] + 1;
+        else if(arr[i]<=52) greenA[1]++;
+        else if(arr[i]<=78) greenA[2]++;
+        else if(arr[i]<=104) greenA[3]++;
+        else if(arr[i]<=130) greenA[4]++;
+        else if(arr[i]<=156) greenA[5]++;
+        else if(arr[i]<=182) greenA[6]++;
+        else if(arr[i]<=208) greenA[7]++;
+        else if(arr[i]<=234) greenA[8]++;
+        else if(arr[i]<=255) greenA[9]++;
+
+        if(arr[i]<=26) blueA[0]++;
+        else if(arr[i]<=52) blueA[1]++;
+        else if(arr[i]<=78) blueA[2]++;
+        else if(arr[i]<=104) blueA[3]++;
+        else if(arr[i]<=130) blueA[4]++;
+        else if(arr[i]<=156) blueA[5]++;
+        else if(arr[i]<=182) blueA[6]++;
+        else if(arr[i]<=208) blueA[7]++;
+        else if(arr[i]<=234) blueA[8]++;
+        else if(arr[i]<=255) blueA[9]++;
+    }
+
+    redA[0] = redA[0]/(arr.length/4)*100;
+    redA[1] = redA[1]/(arr.length/4)*100;
+    redA[2] = redA[2]/(arr.length/4)*100;
+    redA[3] = redA[3]/(arr.length/4)*100;
+    redA[4] = redA[4]/(arr.length/4)*100;
+    redA[5] = redA[5]/(arr.length/4)*100;
+    redA[6] = redA[6]/(arr.length/4)*100;
+    redA[7] = redA[7]/(arr.length/4)*100;
+    redA[8] = redA[8]/(arr.length/4)*100;
+    redA[9] = redA[9]/(arr.length/4)*100;
+
+    greenA[0] = greenA[0]/(arr.length/4)*100;
+    greenA[1] = greenA[1]/(arr.length/4)*100;
+    greenA[2] = greenA[2]/(arr.length/4)*100;
+    greenA[3] = greenA[3]/(arr.length/4)*100;
+    greenA[4] = greenA[4]/(arr.length/4)*100;
+    greenA[5] = greenA[5]/(arr.length/4)*100;
+    greenA[6] = greenA[6]/(arr.length/4)*100;
+    greenA[7] = greenA[7]/(arr.length/4)*100;
+    greenA[8] = greenA[8]/(arr.length/4)*100;
+    greenA[9] = greenA[9]/(arr.length/4)*100;
+
+    blueA[0] = blueA[0]/(arr.length/4)*100;
+    blueA[1] = blueA[1]/(arr.length/4)*100;
+    blueA[2] = blueA[2]/(arr.length/4)*100;
+    blueA[3] = blueA[3]/(arr.length/4)*100;
+    blueA[4] = blueA[4]/(arr.length/4)*100;
+    blueA[5] = blueA[5]/(arr.length/4)*100;
+    blueA[6] = blueA[6]/(arr.length/4)*100;
+    blueA[7] = blueA[7]/(arr.length/4)*100;
+    blueA[8] = blueA[8]/(arr.length/4)*100;
+    blueA[9] = blueA[9]/(arr.length/4)*100;
+
+    myChart.canvas
+        data = {
+        labels: labels,
+        datasets: [{
+            label: 'rdeča',
+            backgroundColor: 'rgba(255, 0, 0,0.1)',
+            borderColor: 'rgb(255, 0, 0)',
+            data: redA,
+            fill: true,
+        },
+        {
+            label: 'zelena',
+            backgroundColor: 'rgba(0, 255, 0,0.2)',
+            borderColor: 'rgb(0, 255, 0)',
+            data: greenA,
+            fill: true,
+        },
+        {
+            label: 'modra',
+            backgroundColor: 'rgba(0, 0, 255,0.3)',
+            borderColor: 'rgb(0, 0, 255)',
+            data: blueA,
+            fill: true,
+        }
+    ]
+    };
+    myChart.update();
+}
+    let labels = [
+        '26',
+        '52',
+        '78',
+        '104',
+        '130',
+        '156',
+        '182',
+        '208',
+        '234',
+        '255'
+    ];
+    let data = {
+        labels: labels,
+        datasets: [{
+            label: 'rdeča',
+            backgroundColor: 'rgba(255, 0, 0,0.5)',
+            borderColor: 'rgb(255, 0, 0)',
+            data: redA,
+            fill: true,
+        },
+        {
+            label: 'zelena',
+            backgroundColor: 'rgba(0, 255, 0,0.5)',
+            borderColor: 'rgb(0, 255, 0)',
+            data: greenA,
+            fill: true,
+        },
+        {
+            label: 'modra',
+            backgroundColor: 'rgba(0, 0, 255,0.5)',
+            borderColor: 'rgb(0, 0, 255)',
+            data: blueA,
+            fill: true,
+        }
+    ]
+    };
+
+    let config = {
+        type: 'line',
+        data: data,
+        options: {
+            elements: {
+                line: {
+                    tension: 0.5
+                }
+            }
+            
+        }
+    };
+    let chartCanvas = document.getElementById('hist');
+    let histoRefresh = document.getElementById("refr");
+    let ctxHist = chartCanvas.getContext("2d");
+    let myChart = new Chart(
+        document.getElementById('hist'),
+        config
+    );
+
+    histoRefresh.addEventListener("click",()=>{
+        histogram();
+        console.log("PRESSED");
+    })
+
+    let gs = document.getElementById('gs');
+    let th = document.getElementById('th');
+    let rrgb = document.getElementById('rrgb');
+    let ergb = document.getElementById('ergb');
+    let br = document.getElementById('br');
+    let res = document.getElementById('res');
+    let inv = document.getElementById('inv');
+
+    gs.addEventListener('click', greyscale);
+    th.addEventListener('click', treshold);
+    rrgb.addEventListener('click', removeRGB);
+    ergb.addEventListener('click', colorChannel);
+    br.addEventListener('click', brightness);
+    res.addEventListener('click', resetAll);
+    inv.addEventListener('click', invert);
+});
+</script>
+</body>
+</html>
